@@ -16,7 +16,7 @@ const userSchema = new Schema({
     email:{
         type:Schema.Types.String,
         required:true,
-        trim:true     
+        trim:true,
     },
     password:{
         type:Schema.Types.String,

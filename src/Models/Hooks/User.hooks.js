@@ -7,6 +7,6 @@ module.exports = {
             if (!user.isModified('password')) return next();
             user.password = bcrypt.hashSync(user.password, 10);
             next();
-        })        
+        })
     }
 }   

@@ -2,12 +2,12 @@ const {UserModel} = require("../Models")
 const {compareSync} = require("bcrypt")
 const {JWT_SECRET} = require("../Config/config")
 const jwt = require("jsonwebtoken")
-const {readFile} = require("../Utils/files.utils")
+const mongoose = require("mongoose")
 
 module.exports = {
     signup:async(req,res)=> {
         try{
-            const payload = await UserModel.findOne({email:req.body.email})
+            const payload = await UserModel.findOne({email:req.body.email,phone:req.body.phone})
             if(payload){
                 return res.status(400).json({
                     success:false,
@@ -16,15 +16,13 @@ module.exports = {
             }
 
             const result = await UserModel.create(req.body)
-            await readFile(req,res)
-
+            
             return res.status(200).json({
                 success:true,
                 message:"User created successfully",
                 data:result
             })
         }catch(error){
-            console.log(error);
             return res.status(500).json({
                 success:false,
                 message:"Internal server error",
@@ -59,6 +57,31 @@ module.exports = {
 
         }catch(error){
             console.log(error);
+            return res.status(500).json({
+                success:false,
+                message:"Internal server error",
+                error
+            })
+        }
+    },
+
+     disableUser:async(req,res)=>{
+        try{
+            const result = await UserModel.findByIdAndUpdate(req.body._id,{is_active:false},{new:true});
+            if(!result){
+                return res.status(400).json({
+                    success:false,
+                    message:"Error occured while disabling the user."
+                })
+            }
+
+            return res.status(200).json({
+                success:true,
+                message:"User Disabled",
+                data:result
+            }) 
+
+        }catch(error){
             return res.status(500).json({
                 success:false,
                 message:"Internal server error",
