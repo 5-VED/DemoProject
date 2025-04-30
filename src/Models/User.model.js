@@ -1,4 +1,4 @@
-    const {Schema, model} = require('mongoose');
+const {Schema, model} = require('mongoose');
 const baseFieldsSchema = require('./BaseFields.model');
 const UserHooks = require('./Hooks/User.hooks');
 

@@ -1,31 +1,75 @@
 const {UserModel} = require('../Models')
+const jwt = require("jsonwebtoken")
+const {JWT_SECRET} = require("../Co nfig/config")
 
-const auth = ({isTokenRequired = false, allowedUsers=[]}={})=> {
-    return async (req,res,next) => {
-        try{
-            const token = req.headers('x-auth-token') || req.headers('Authorization')
-
-            if(!isTokenRequired && token){
-                
-            }
-
-            if(!token){
+const auth = ({ isTokenRequired = true, usersAllowed = [] }) => {
+	return async (req, res, next) => {
+		try {
+			const token = (req.header('x-auth-token') || req.header('Authorization'))?.replace(/Bearer +/g, '') 
+                                                                                                                                                                                                                                                                                                          
+			if (isTokenRequired && !token) {
                 return res.status(400).json({
-                    success:false,
-                    message:"You are not authorized to access this source."
+                    res,
+                    message:"Please enter token",
+                    data:{}                    
+                })							
+			}
+
+			if (!isTokenRequired && !token) return next();
+
+            let decoded = jwt.verify(token,JWT_SECRET)
+
+            if(!decoded._id){
+                return res.status(401).json({
+                    res,
+                    message:"Unauthorized",
+                    data:{}
                 })
             }
 
-            
+			const user = await UserModel.findOne({
+				_id: decoded._id,
+				isActive: true}).populate({
+				path: 'role',
+				select: 'role',
+			});
+				            
+			if (!user) {				
+                return res.status(401).json({
+                    res,
+                    message:"Invalid Token",
+                    data:{}
+                })												
+			}
 
-        }catch(error){
+			req.user = {
+				...decoded,
+				// ...user,
+				id: user?.id,
+				role: user?.role?.role,
+				email: user?.email,
+			};
+
+
+			if (req?.user?.role === "Admin" || usersAllowed.includes('*')) {
+				return next();
+			}
+
+			if (usersAllowed.includes(req?.user?.role)) return next();
+
+            return res.status(401).json({
+                res,
+                message:"Invalid Token",
+                data:{}
+            })											
+		} catch (error) {
             return res.status(500).json({
-                success:false,
+                res,
                 message:"Internal Server Error",
                 data:error
-            })
-        }
-    } 
-}
+            })						
+		}
+	};
+};
 
 module.exports = auth;

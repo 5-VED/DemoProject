@@ -48,7 +48,7 @@ module.exports = {
 
             const token = jwt.sign({email,_id:user._id,role:user.role}, JWT_SECRET,{expiresIn:"2d"})
 
-            return res.status(200).json({
+            return res.status(201).json({
                 success:true,
                 message:"User logged in Successfully.",
                 data:{
